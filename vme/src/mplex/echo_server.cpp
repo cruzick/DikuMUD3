@@ -160,7 +160,6 @@ void runechoserver()
      // set up tls endpoint
     wsserver endpoint_tls;
     endpoint_tls.init_asio();
-     endpoint_tls.set_message_handler(bind(&on_message<wsserver>,&endpoint_tls,::_1,::_2));
     // TLS endpoint has an extra handler for the tls init
     endpoint_tls.set_tls_init_handler(bind(&on_tls_init,::_1));
     // tls endpoint listens on a different port
