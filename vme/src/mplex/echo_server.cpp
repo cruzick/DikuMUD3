@@ -141,7 +141,7 @@ void runechoserver()
     // TLS endpoint has an extra handler for the tls init
     endpoint_tls.set_tls_init_handler(bind(&on_tls_init,::_1));
     // tls endpoint listens on a different port
-    echo_server.set_close_handler(bind(&on_close, ::_1));
+    endpoint_tls.set_close_handler(bind(&on_close, ::_1));
     endpoint_tls.set_reuse_addr(true);
     endpoint_tls.listen(g_mplex_arg.nMotherPort);
     endpoint_tls.start_accept();
