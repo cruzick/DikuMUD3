@@ -3,7 +3,7 @@
 #include "slog.h"
 #include "textutil.h"
 
-#include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/config/asio.hpp>  // OLD #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
 // typedef websocketpp::server<websocketpp::config::asio> wsserver;
