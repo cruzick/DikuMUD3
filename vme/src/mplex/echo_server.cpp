@@ -17,7 +17,7 @@ namespace mplex
 
 // pull out the type of messages sent by our config
 typedef wsserver::message_ptr message_ptr;
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+
 
 // std::map<std::owner_less<websocketpp::connection_hdl>, void *> g_cMapHandler;
 std::map<websocketpp::connection_hdl, cConHook *, std::owner_less<websocketpp::connection_hdl>> g_cMapHandler;
