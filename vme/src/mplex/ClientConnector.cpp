@@ -1430,6 +1430,7 @@ void cConHook::ShowChunk()
 }
 
 typedef websocketpp::server<websocketpp::config::asio_tls> wsserver;
+typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
 
 // Nice if it could be in the constructor
 void cConHook::SetWebsocket(wsserver *server, websocketpp::connection_hdl hdl)
