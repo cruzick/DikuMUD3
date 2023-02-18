@@ -134,18 +134,20 @@ void on_message(wsserver *s, websocketpp::connection_hdl hdl, message_ptr msg)
 void runechoserver()
 {
      // set up tls endpoint
-     endpoint_tls;
-    endpoint_tls.init_asio(&);
+    wsserver endpoint_tls;
+    endpoint_tls.init_asio();
     endpoint_tls.set_message_handler(
-        bind(&on_message<server_tls>,&endpoint_tls,::_1,::_2));
+        bind(&on_message<wsserver>,&endpoint_tls,::_1,::_2));
     // TLS endpoint has an extra handler for the tls init
     endpoint_tls.set_tls_init_handler(bind(&on_tls_init,::_1));
     // tls endpoint listens on a different port
-    endpoint_tls.listen(443);
+    echo_server.set_close_handler(bind(&on_close, ::_1));
+    endpoint_tls.set_reuse_addr(true);
+    endpoint_tls.listen(g_mplex_arg.nMotherPort);
     endpoint_tls.start_accept();
     // Create a server endpoint
-    wsserver echo_server;
-
+    //OLDwsserver echo_server;
+    /*
     try
     {
         // Set logging settings
@@ -183,7 +185,9 @@ void runechoserver()
     {
         slog(LOG_OFF, 0, "Exception other");
         exit(42);
-    }
+    } 
+    */
+
 }
 
 } // namespace mplex
