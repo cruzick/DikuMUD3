@@ -14,14 +14,14 @@
 #include "queue.h"
 
 #include <cstring>
-#include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/config/asio.hpp>  //old #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
 namespace mplex
 {
 
 // typedef websocketpp::server<websocketpp::config::asio> wsserver;
-typedef websocketpp::server<websocketpp::config::asio> wsserver;
+typedef websocketpp::server<websocketpp::config::asio_tls> wsserver;
 
 class cConHook : public cHook
 {

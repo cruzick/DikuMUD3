@@ -1429,7 +1429,7 @@ void cConHook::ShowChunk()
     Write((ubit8 *)buffer, strlen(buffer));
 }
 
-typedef websocketpp::server<websocketpp::config::asio> wsserver;
+typedef websocketpp::server<websocketpp::config::asio_tls> wsserver;
 
 // Nice if it could be in the constructor
 void cConHook::SetWebsocket(wsserver *server, websocketpp::connection_hdl hdl)
