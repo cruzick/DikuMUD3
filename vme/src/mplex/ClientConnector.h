@@ -22,7 +22,6 @@ namespace mplex
 
 // typedef websocketpp::server<websocketpp::config::asio> wsserver;
 typedef websocketpp::server<websocketpp::config::asio_tls> wsserver;
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
 
 
 class cConHook : public cHook
