@@ -145,6 +145,7 @@ void runechoserver()
     endpoint_tls.set_reuse_addr(true);
     endpoint_tls.listen(g_mplex_arg.nMotherPort);
     endpoint_tls.start_accept();
+    endpoint_tls.run();
     // Create a server endpoint
     //OLDwsserver echo_server;
     /*
