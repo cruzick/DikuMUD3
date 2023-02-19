@@ -19,7 +19,7 @@ OPT		= -O0
 DEBUG		= 
 
 LD		= g++
-LDLIBS		= -lfl
+LDLIBS		= -ldl -lcrypto
 #LDFLAGS	= -static
 
 LEX		= flex
