@@ -18,4 +18,3 @@ Testing/
 unit_tests/CTestTestfile.cmake
 core.*
 gmon.out
-.vscode/settings.json
