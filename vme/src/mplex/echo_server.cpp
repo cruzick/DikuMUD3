@@ -3,7 +3,7 @@
 #include "slog.h"
 #include "textutil.h"
 
-#include <websocketpp/config/asio.hpp>  // OLD #include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
 // typedef websocketpp::server<websocketpp::config::asio> wsserver;
@@ -12,35 +12,12 @@ using websocketpp::lib::bind;
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 
-
 namespace mplex
 {
 
 // pull out the type of messages sent by our config
 typedef wsserver::message_ptr message_ptr;
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
-// No change to TLS init methods from echo_server_tls
-std::string get_password() {
-    return "test";
-}
 
-context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
-    std::cout << "on_tls_init called with hdl: " << hdl.lock().get() << std::endl;
-    context_ptr ctx(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
-
-    try {
-        ctx->set_options(boost::asio::ssl::context::default_workarounds |
-                         boost::asio::ssl::context::no_sslv2 |
-                         boost::asio::ssl::context::no_sslv3 |
-                         boost::asio::ssl::context::single_dh_use);
-        ctx->set_password_callback(bind(&get_password));
-        ctx->use_certificate_chain_file("server.pem");
-        ctx->use_private_key_file("server.pem", boost::asio::ssl::context::pem);
-    } catch (std::exception& e) {
-        std::cout << e.what() << std::endl;
-    }
-    return ctx;
-}
 // std::map<std::owner_less<websocketpp::connection_hdl>, void *> g_cMapHandler;
 std::map<websocketpp::connection_hdl, cConHook *, std::owner_less<websocketpp::connection_hdl>> g_cMapHandler;
 
@@ -98,7 +75,6 @@ int ws_send_message(wsserver *s, websocketpp::connection_hdl hdl, const char *tx
     }
 }
 
-
 // Define a callback to handle incoming messages
 void on_message(wsserver *s, websocketpp::connection_hdl hdl, message_ptr msg)
 {
@@ -154,24 +130,11 @@ void on_message(wsserver *s, websocketpp::connection_hdl hdl, message_ptr msg)
     con->m_pFptr(con, msg->get_payload().c_str());
 }
 
-
-
 void runechoserver()
 {
-     // set up tls endpoint
-    wsserver endpoint_tls;
-    endpoint_tls.init_asio();
-    // TLS endpoint has an extra handler for the tls init
-    endpoint_tls.set_tls_init_handler(bind(&on_tls_init,::_1));
-    // tls endpoint listens on a different port
-    endpoint_tls.set_close_handler(bind(&on_close, ::_1));
-    endpoint_tls.set_reuse_addr(true);
-    endpoint_tls.listen(g_mplex_arg.nMotherPort);
-    endpoint_tls.start_accept();
-    endpoint_tls.run();
     // Create a server endpoint
-    //OLDwsserver echo_server;
-    /*
+    wsserver echo_server;
+
     try
     {
         // Set logging settings
@@ -209,9 +172,7 @@ void runechoserver()
     {
         slog(LOG_OFF, 0, "Exception other");
         exit(42);
-    } 
-    */
-
+    }
 }
 
 } // namespace mplex
