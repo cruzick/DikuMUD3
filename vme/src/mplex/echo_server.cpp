@@ -3,10 +3,8 @@
 #include "slog.h"
 #include "textutil.h"
 
-#include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/config/asio.hpp>
 #include <websocketpp/server.hpp>
-
-// typedef websocketpp::server<websocketpp::config::asio> wsserver;
 
 using websocketpp::lib::bind;
 using websocketpp::lib::placeholders::_1;
@@ -15,10 +13,10 @@ using websocketpp::lib::placeholders::_2;
 namespace mplex
 {
 
-// pull out the type of messages sent by our config
+typedef websocketpp::server<websocketpp::config::asio> wsserver;
+
 typedef wsserver::message_ptr message_ptr;
 
-// std::map<std::owner_less<websocketpp::connection_hdl>, void *> g_cMapHandler;
 std::map<websocketpp::connection_hdl, cConHook *, std::owner_less<websocketpp::connection_hdl>> g_cMapHandler;
 
 void remove_gmap(cConHook *con)
@@ -55,7 +53,6 @@ void on_close(websocketpp::connection_hdl hdl)
     }
 }
 
-// send message back to websocket client: 1 is message sent, 0 if failure
 int ws_send_message(wsserver *s, websocketpp::connection_hdl hdl, const char *txt)
 {
     std::string mystr(txt);
@@ -65,7 +62,6 @@ int ws_send_message(wsserver *s, websocketpp::connection_hdl hdl, const char *tx
     try
     {
         s->send(hdl, mystr.c_str(), mystr.length(), websocketpp::frame::opcode::text);
-        // s->send(hdl, txt, strlen(txt), websocketpp::frame::opcode::text);
         return 1;
     }
     catch (websocketpp::exception const &e)
@@ -75,26 +71,22 @@ int ws_send_message(wsserver *s, websocketpp::connection_hdl hdl, const char *tx
     }
 }
 
-// Define a callback to handle incoming messages
 void on_message(wsserver *s, websocketpp::connection_hdl hdl, message_ptr msg)
 {
     cConHook *con = nullptr;
 
     if (g_cMapHandler.find(hdl) == g_cMapHandler.end())
     {
-        // Crete the con hook
         con = new cConHook();
         con->SetWebsocket(s, hdl);
         g_cMapHandler[hdl] = con;
 
-        // Get the IP address
         const auto theip = s->get_con_from_hdl(hdl);
         boost::asio::ip::address theadr = theip->get_raw_socket().remote_endpoint().address();
         std::string ip_as_string{theadr.to_string()};
         if (theadr.is_v6())
         {
             auto v6 = boost::asio::ip::make_address_v6(theadr.to_string());
-            // Lets hope it is a ipv4 mapped to ipv6 address space
             if (v6.is_v4_mapped())
             {
                 auto v4 = boost::asio::ip::make_address_v4(boost::asio::ip::v4_mapped_t::v4_mapped, v6);
@@ -106,61 +98,44 @@ void on_message(wsserver *s, websocketpp::connection_hdl hdl, message_ptr msg)
             }
         }
         strncpy(con->m_aHost, ip_as_string.c_str(), sizeof(con->m_aHost) - 1);
-        *(con->m_aHost + sizeof(con->m_aHost) - 1) = '\0';
+                *(con->m_aHost + sizeof(con->m_aHost) - 1) = '\0';
         slog(LOG_OFF, 0, "IP connection from: %s", con->m_aHost);
     }
 
     con = (cConHook *)g_cMapHandler[hdl];
     assert(con);
 
-    // Log here to see all commands received (plus passwords :()
-    // slog(LOG_OFF, 0, "on_message called with hdl %p and messsage %s.",
-    //        hdl.lock().get(), msg->get_payload().c_str());
-
-    // check for a special command to instruct the server to stop listening so
-    // it can be cleanly exited.
-
-    /*
-    if (msg->get_payload() == "stop-listening") {
-        s->stop_listening();
-        con->Close( TRUE );
-        return;
-    }*/
-
     con->m_pFptr(con, msg->get_payload().c_str());
 }
 
 void runechoserver()
 {
-    // Create a server endpoint
     wsserver echo_server;
 
     try
     {
-        // Set logging settings
-        // echo_server.set_access_channels(websocketpp::log::alevel::all);
-        // echo_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
         echo_server.set_access_channels(websocketpp::log::alevel::none);
         echo_server.clear_access_channels(websocketpp::log::alevel::none);
 
-        // Initialize Asio
         echo_server.init_asio();
 
-        // Register our message handler
-        // Look in endpoint.hpp for various types of handlers you can bind, e.g. set_open_handler
+        echo_server.set_tls_init_handler([](websocketpp::connection_hdl){
+            auto ctx = websocketpp::lib::make_shared<websocketpp::lib::asio::ssl::context>(websocketpp::lib::asio::ssl::context::tlsv12);
 
-        // echo_server.set_open_handler(bind(&on_open, ::_1));
+            ctx->use_private_key_file("path_to_private_key.pem", websocketpp::lib::asio::ssl::context::pem);
+            ctx->use_certificate_file("path_to_certificate.pem", websocketpp::lib::asio::ssl::context::pem);
+
+            return ctx;
+        });
+
         echo_server.set_close_handler(bind(&on_close, ::_1));
         echo_server.set_message_handler(bind(&on_message, &echo_server, ::_1, ::_2));
 
-        // Listen on port
         echo_server.set_reuse_addr(true);
-        echo_server.listen(g_mplex_arg.nMotherPort);
+        echo_server.listen(websocketpp::lib::asio::ip::tcp::v4(), g_mplex_arg.nMotherPort);
 
-        // Start the server accept loop
         echo_server.start_accept();
 
-        // Start the ASIO io_service run loop
         echo_server.run();
     }
     catch (websocketpp::exception const &e)
@@ -176,3 +151,4 @@ void runechoserver()
 }
 
 } // namespace mplex
+
